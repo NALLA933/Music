@@ -4,20 +4,30 @@
 
 
 import asyncio
+import signal
 import importlib
+from contextlib import suppress
 
-from pyrogram import idle
-
-from anony import (anon, app, config, db,
-                   logger, stop, userbot, yt)
+from anony import (anon, app, config, db, logger,
+                   stop, thumb, userbot, yt)
 from anony.plugins import all_modules
 
+
+async def idle():
+    loop = asyncio.get_running_loop()
+    stop_event = asyncio.Event()
+
+    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGABRT):
+        with suppress(NotImplementedError):
+            loop.add_signal_handler(sig, stop_event.set)
+    await stop_event.wait()
 
 async def main():
     await db.connect()
     await app.boot()
     await userbot.boot()
     await anon.boot()
+    await thumb.start()
 
     for module in all_modules:
         importlib.import_module(f"anony.plugins.{module}")

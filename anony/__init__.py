@@ -4,6 +4,7 @@
 
 
 import time
+import asyncio
 import logging
 from logging.handlers import RotatingFileHandler
 
@@ -24,7 +25,7 @@ logging.getLogger("pytgcalls").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 
 from config import Config
 
@@ -53,8 +54,9 @@ from anony.core.youtube import YouTube
 tg = Telegram()
 yt = YouTube()
 
-from anony.helpers import Queue
+from anony.helpers import Queue, Thumbnail
 queue = Queue()
+thumb = Thumbnail()
 
 from anony.core.calls import TgCall
 anon = TgCall()
@@ -66,11 +68,12 @@ async def stop() -> None:
         task.cancel()
         try:
             await task
-        except Exception:
+        except asyncio.exceptions.CancelledError:
             pass
 
     await app.exit()
     await userbot.exit()
     await db.close()
+    await thumb.close()
 
     logger.info("Stopped.\n")

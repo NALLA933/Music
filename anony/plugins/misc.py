@@ -3,8 +3,8 @@
 # This file is part of AnonXMusic
 
 
-import asyncio
 import time
+import asyncio
 
 from pyrogram import enums, errors, filters, types
 
@@ -22,24 +22,20 @@ async def auto_leave():
     while True:
         await asyncio.sleep(1800)
         for ub in userbot.clients:
-            left = 0
             try:
-                async for dialog in ub.get_dialogs():
-                    chat = dialog.chat
-                    if left >= 20:
-                        break
-                    if chat.type not in [
-                        enums.ChatType.GROUP,
-                        enums.ChatType.SUPERGROUP,
-                    ]:
+                chats = [dialog.chat.id async for dialog in ub.get_dialogs()
+                            if dialog.chat.type in [
+                                enums.ChatType.GROUP, enums.ChatType.SUPERGROUP,
+                            ]][-20:]
+                for chat in chats:
+                    if chat in [app.logger, -1001686672798, -1001549206010]:
                         continue
-                    if chat.id in [app.logger, -1001686672798, -1001549206010]:
+                    if chat in db.active_calls:
                         continue
-                    if chat.id in db.active_calls:
-                        continue
-                    await ub.leave_chat(chat.id)
-                    left += 1
+                    await ub.leave_chat(chat)
                     await asyncio.sleep(5)
+            except asyncio.CancelledError:
+                raise
             except Exception:
                 continue
 
@@ -96,6 +92,8 @@ async def update_timer(length=10):
                         chat_id=chat_id, timer=timer, remove=remove
                     ),
                 )
+            except asyncio.CancelledError:
+                raise
             except Exception:
                 pass
 
