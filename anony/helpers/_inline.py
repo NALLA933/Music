@@ -153,7 +153,7 @@ class Inline:
                 [
                     self.ikb(
                         text=lang["sudo_owner"],
-                        url="https://t.me/Senpai_Waifu_Grabbing_Bot?start=_tgr_1tTPLUQwNjI1",
+                        url="https://t.me/BakaMusic_Bot?start=_tgr_HdE8BLVlOTg9",
                     )
                 ]
             ]
