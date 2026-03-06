@@ -152,7 +152,7 @@ class Inline:
             rows += [
                 [
                     self.ikb(
-                        text=lang["sudo_owner"],
+                        text=lang["source"],
                         url="https://t.me/BakaMusic_Bot?start=_tgr_HdE8BLVlOTg9",
                     )
                 ]
