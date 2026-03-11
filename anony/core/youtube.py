@@ -131,15 +131,21 @@ class YouTube:
         else:
             ydl_opts = {
                 **base_opts,
-                "format": "bestaudio[ext=webm][acodec=opus]",
+                # FIX: Added fallback formats
+                "format": "bestaudio[ext=webm][acodec=opus]/bestaudio[ext=m4a]/bestaudio/best",
             }
 
         def _download():
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 try:
                     ydl.download([url])
-                except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError):
-                    if cookie: self.cookies.remove(cookie)
+                except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as e:
+                    # FIX: Only remove cookie on auth errors, not format errors
+                    err = str(e).lower()
+                    if cookie and ("sign in" in err or "cookies" in err or "bot" in err):
+                        if cookie in self.cookies:
+                            self.cookies.remove(cookie)
+                        logger.warning("Cookie removed due to auth error.")
                     return None
                 except Exception as ex:
                     logger.warning("Download failed: %s", ex)
