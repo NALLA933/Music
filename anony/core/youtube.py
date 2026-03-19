@@ -121,15 +121,14 @@ class YouTube:
         cookie = self.get_cookies()
         base_opts = {
             "outtmpl": "downloads/%(id)s.%(ext)s",
-            "quiet": True,
+            "quiet": False,   # errors dikhne ke liye temporarily True se False
             "noplaylist": True,
             "geo_bypass": True,
-            "no_warnings": True,
+            "no_warnings": False,
             "overwrites": False,
             "nocheckcertificate": True,
             "cookiefile": cookie,
             "check_formats": False,
-            "remote_components": ["ejs:github"],
             "extractor_args": {
                 "youtube": {
                     "player_client": ["mweb"],
@@ -156,7 +155,8 @@ class YouTube:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 try:
                     ydl.download([url])
-                except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError):
+                except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as e:
+                    logger.error("yt-dlp DownloadError: %s", e)
                     return None
                 except Exception as ex:
                     logger.warning("Download failed: %s", ex)
