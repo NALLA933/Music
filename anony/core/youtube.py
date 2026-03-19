@@ -25,7 +25,7 @@ class _YTLogger:
         skip_keywords = [
             "jsc", "0.7.0", "challenge", "PO Token",
             "po_token", "GVS", "n challenge", "skipping",
-            "No title found"
+            "No title found", "Incomplete data", "re-fetching", "embedded initial data"
         ]
         if not any(k.lower() in msg.lower() for k in skip_keywords):
             logger.warning(msg)
