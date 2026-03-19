@@ -127,15 +127,25 @@ class YouTube:
             pass
         return tracks
 
-    def _find_downloaded_file(self, video_id: str) -> str | None:
+    def _find_downloaded_file(self, video_id: str, video: bool = False) -> str | None:
         matches = glob(f"downloads/{video_id}.*")
         matches = [f for f in matches if not f.endswith(".part")]
-        return matches[0] if matches else None
+        if not matches:
+            return None
+        if video:
+            # vplay ke liye sirf mp4
+            mp4_files = [f for f in matches if f.endswith(".mp4")]
+            return mp4_files[0] if mp4_files else None
+        else:
+            # play ke liye mp4 ke alawa (webm, m4a, opus)
+            audio_files = [f for f in matches if not f.endswith(".mp4")]
+            return audio_files[0] if audio_files else None
 
     async def download(self, video_id: str, video: bool = False) -> str | None:
         url = self.base + video_id
 
-        existing = self._find_downloaded_file(video_id)
+        # Sahi type ki file pehle se hai toh wahi return karo
+        existing = self._find_downloaded_file(video_id, video)
         if existing:
             return existing
 
@@ -183,6 +193,6 @@ class YouTube:
                 except Exception as ex:
                     logger.warning("Download failed: %s", ex)
                     return None
-            return self._find_downloaded_file(video_id)
+            return self._find_downloaded_file(video_id, video)
 
         return await asyncio.to_thread(_download)
