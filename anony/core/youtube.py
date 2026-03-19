@@ -10,11 +10,22 @@ import random
 import asyncio
 import aiohttp
 from pathlib import Path
+from glob import glob
 
 from py_yt import Playlist, VideosSearch
 
 from anony import logger
 from anony.helpers import Track, utils
+
+
+class _YTLogger:
+    def debug(self, msg): pass
+    def info(self, msg): pass
+    def warning(self, msg):
+        if "jsc" not in msg and "0.7.0" not in msg and "challenge" not in msg.lower():
+            logger.warning(msg)
+    def error(self, msg):
+        logger.error(msg)
 
 
 class YouTube:
@@ -110,21 +121,29 @@ class YouTube:
             pass
         return tracks
 
+    def _find_downloaded_file(self, video_id: str) -> str | None:
+        """Find actual downloaded file regardless of extension."""
+        matches = glob(f"downloads/{video_id}.*")
+        # exclude .part files
+        matches = [f for f in matches if not f.endswith(".part")]
+        return matches[0] if matches else None
+
     async def download(self, video_id: str, video: bool = False) -> str | None:
         url = self.base + video_id
-        ext = "mp4" if video else "webm"
-        filename = f"downloads/{video_id}.{ext}"
 
-        if Path(filename).exists():
-            return filename
+        # Check if already downloaded (any extension)
+        existing = self._find_downloaded_file(video_id)
+        if existing:
+            return existing
 
         cookie = self.get_cookies()
         base_opts = {
             "outtmpl": "downloads/%(id)s.%(ext)s",
-            "quiet": False,   # errors dikhne ke liye temporarily True se False
+            "quiet": True,
+            "no_warnings": True,
+            "logger": _YTLogger(),
             "noplaylist": True,
             "geo_bypass": True,
-            "no_warnings": False,
             "overwrites": False,
             "nocheckcertificate": True,
             "cookiefile": cookie,
@@ -156,11 +175,11 @@ class YouTube:
                 try:
                     ydl.download([url])
                 except (yt_dlp.utils.DownloadError, yt_dlp.utils.ExtractorError) as e:
-                    logger.error("yt-dlp DownloadError: %s", e)
+                    logger.error("yt-dlp error: %s", e)
                     return None
                 except Exception as ex:
                     logger.warning("Download failed: %s", ex)
                     return None
-            return filename
+            return self._find_downloaded_file(video_id)
 
         return await asyncio.to_thread(_download)
